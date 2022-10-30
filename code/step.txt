@@ -1,0 +1,42 @@
+#include <Stepper.h>
+#include <LiquidCrystal_I2C_AvrI2C.h>
+LiquidCrystal_I2C_AvrI2C lcd(0x27,16,2);  
+
+
+const int stepsPerRevolution = 200; //step motorun tam turundaki adım sayısı açısı 1.8derece
+const int hizkontrol=A2;//potansiyometrenin anolog girişi
+
+Stepper myStepper(stepsPerRevolution, 12, 11, 10, 9);
+
+void setup()
+{
+  lcd.begin(); //lcd'yi başlatıyoruz
+  lcd.backlight(); //lcd arka ışığını açıyoruz.
+  lcd.setCursor(0,0); //imleci 1.satır ilk karaktere getiriyoruz.
+  lcd.print("MOTOR HIZI:"); //İlk satıra yazalım
+  pinMode(2,INPUT);//sağa dönüş girişi
+  pinMode(3,INPUT);//sola dönüş girişi
+
+  Serial.begin(9600);
+}
+
+void loop() 
+{
+  int sensorokuma=analogRead(hizkontrol);
+  int motorhizi=map(sensorokuma,0,1023,0,60);//(rpm-milin dönüş hızı) 0-1023 arasında bir değer okur.
+  if(motorhizi>0){
+    myStepper.setSpeed(motorhizi);
+    if(digitalRead(2)){
+     myStepper.step(stepsPerRevolution/100);
+         lcd.setCursor(0,1);
+  lcd.print("YON:CW");//clockwise 
+    }
+    if(digitalRead(3)){
+     myStepper.step(-stepsPerRevolution/100);
+     lcd.setCursor(0,1);
+  lcd.print("YON:CCW");//counter clockwise
+    } 
+    lcd.setCursor(12,0);
+  lcd.print(motorhizi); 
+}
+}
